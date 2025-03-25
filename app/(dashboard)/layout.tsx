@@ -1,5 +1,6 @@
 "use client";
 import React from "react";
+import TopBar from "@/components/layout/top-bar";
 import { QueryClientProvider, QueryClient } from "@tanstack/react-query";
 
 const queryClient = new QueryClient()
@@ -11,7 +12,10 @@ function DashboardLayout({
 }) {
   return (
     <>
-      <QueryClientProvider client={queryClient}>{children}</QueryClientProvider>
+      <QueryClientProvider client={queryClient}>
+        <TopBar />
+        {children}
+        </QueryClientProvider>
     </>
   );
 }

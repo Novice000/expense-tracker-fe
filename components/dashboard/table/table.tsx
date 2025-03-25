@@ -1,7 +1,6 @@
 "use client";
 import React, { useState, useEffect } from "react";
 import {
-  ColumnDef,
   ColumnFiltersState,
   SortingState,
   VisibilityState,
@@ -40,9 +39,10 @@ import { useQuery } from "@tanstack/react-query";
 import { useExpenseStore } from "@/store/store";
 import { getExpenses } from "@/axios/util";
 import { ClimbingBoxLoader } from "react-spinners";
+import { Card, CardContent } from "@/components/ui/card";
 
 export function DataTable({ className }: { className: string }) {
-  const { expenses, setExpense, setTotal } = useExpenseStore();
+  const { expenses, setExpense, setTotal,setFilteredTotal, setFiltered } = useExpenseStore();
   const [filteredExpenses, setFilteredExpenses] = useState<Expense[]>([]);
   const query = useQuery({
     queryKey: ["expenses"],
@@ -55,20 +55,22 @@ export function DataTable({ className }: { className: string }) {
   const [columnVisibility, setColumnVisibility] = useState<VisibilityState>({});
 
   useEffect(() => {
-    setColumnFilters([
-      {
-        id: "timestamp",
-        value:
-          monthFilter || yearFilter
-            ? { month: monthFilter, year: yearFilter }
-            : undefined,
-      },
-    ]);
+    if (monthFilter === null && yearFilter === null) {
+      setColumnFilters([]); // No filters applied
+    } else {
+      setColumnFilters([
+        {
+          id: "timestamp",
+          value: { month: monthFilter, year: yearFilter },
+        },
+      ]);
+    }
   }, [monthFilter, yearFilter]);
 
   useEffect(() => {
     if (query.data) {
       setExpense(query.data);
+      setTotal(query.data.reduce((acc: number, expense: Expense) => acc + expense.amount, 0));
       console.log(query.data);
     }
   }, [query.data, setExpense]);
@@ -91,58 +93,87 @@ export function DataTable({ className }: { className: string }) {
     },
   });
 
-useEffect(() => {
-  const newFilteredExpenses = table
-    .getFilteredRowModel()
-    .rows.map((row) => row.original);
-  setFilteredExpenses(newFilteredExpenses);
-  const totalAmount = newFilteredExpenses.reduce(
-    (acc, expense) => acc + expense.amount,
-    0
-  );
-  setTotal(totalAmount);
-}, [table.getFilteredRowModel().rows]);
+  useEffect(() => {
+    const newFilteredExpenses = table
+      .getFilteredRowModel()
+      .rows.map((row) => row.original);
+    setFilteredExpenses(newFilteredExpenses);
+    const totalAmount = newFilteredExpenses.reduce(
+      (acc, expense) => acc + expense.amount,
+      0
+    );
+    setFilteredTotal(totalAmount);
+    setFiltered(filteredExpenses);
+  }, [table.getFilteredRowModel().rows]);
 
+  const[availableMonths, setAvailableMonths] = useState<number[]>([]);
+  const [availableYears, setAvailableYears] = useState<number[]>([]);
+
+  useEffect(() => {
+    if (expenses.length) {
+      const months = new Set<number>();
+      const years = new Set<number>();
+
+      expenses.forEach((expense) => {
+        const date = new Date(expense.timestamp);
+        months.add(date.getMonth() + 1); // Months are 0-based
+        years.add(date.getFullYear());
+      });
+
+      setAvailableMonths([...months].sort((a, b) => a - b));
+      setAvailableYears([...years].sort((a, b) => b - a)); // Sort descending
+    }
+  }, [expenses]);
   if (query.isLoading) {
     return (
-      <div className="w-full h-full grid place-content-center">
+      <div className="w-full grid place-content-center">
         <ClimbingBoxLoader size={20} />
       </div>
     );
   }
 
   return (
-    <div className={`w-full ${className ? className : ""} `}>
-      <div className="flex items-center py-4">
+    <Card className={`w-full h-fit ${className ? className : ""} `}>
+      <CardContent>
+      <div className="flex items-center py-4 flex-col md:flex-row">
         <div className="flex gap-4 mb-4">
           <Select
-            value={monthFilter ? `${monthFilter}` : ""}
-            onValueChange={(value) => setMonthFilter(Number(value))}
+            value={monthFilter !== null ? `${monthFilter}` : ""}
+            onValueChange={(value) =>
+              setMonthFilter(value === "all" ? null : Number(value))
+            }
           >
             <SelectTrigger className="w-[180px]">
               <SelectValue placeholder="Select Month" />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="null">All</SelectItem>
-              {Array.from({ length: 12 }, (_, i) => (
-                <SelectItem key={i + 1} value={`${i + 1}`}>
-                  {new Date(0, i).toLocaleString("en-US", { month: "long" })}
+              <SelectItem value="all">All</SelectItem>{" "}
+              {/* Default "All" Option */}
+              {availableMonths.map((month) => (
+                <SelectItem key={month} value={`${month}`}>
+                  {new Date(0, month - 1).toLocaleString("en-US", {
+                    month: "long",
+                  })}
                 </SelectItem>
               ))}
             </SelectContent>
           </Select>
+
           <Select
-            value={yearFilter ? `${yearFilter}` : ""}
-            onValueChange={(value) => setYearFilter(Number(value))}
+            value={yearFilter !== null ? `${yearFilter}` : ""}
+            onValueChange={(value) =>
+              setYearFilter(value === "all" ? null : Number(value))
+            }
           >
             <SelectTrigger className="w-[180px]">
               <SelectValue placeholder="Select Year" />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="null">All</SelectItem>
-              {Array.from({ length: 5 }, (_, i) => (
-                <SelectItem key={i} value={`${new Date().getFullYear() - i}`}>
-                  {new Date().getFullYear() - i}
+              <SelectItem value="all">All</SelectItem>{" "}
+              {/* Default "All" Option */}
+              {availableYears.map((year) => (
+                <SelectItem key={year} value={`${year}`}>
+                  {year}
                 </SelectItem>
               ))}
             </SelectContent>
@@ -249,6 +280,7 @@ useEffect(() => {
           </Button>
         </div>
       </div>
-    </div>
+      </CardContent>
+    </Card>
   );
 }

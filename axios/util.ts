@@ -6,6 +6,15 @@ type AuthData = {
   password: string;
 };
 
+async function getUser(){
+  try {
+    const response = await baseAuth.get("/auth/users/me");
+    return response.data;
+  } catch (error: any) {
+    throw new Error(error.response?.data?.message || "An error occurred");
+  }
+}
+
 async function getExpenses(
   month: number | null = null,
   year: number | null = null
@@ -56,4 +65,4 @@ async function Auth(authType: "login" | "register", data: AuthData | FormData) {
   }
 }
 
-export { getExpenses, getSingleExpense, postExpense, Auth };
+export { getUser ,getExpenses, getSingleExpense, postExpense, Auth };

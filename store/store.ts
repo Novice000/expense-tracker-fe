@@ -4,9 +4,13 @@ import { Expense } from "@/components/dashboard/table/table-def";
 
 type fetchLimit = {
   expenses: Expense[];
+  filtered: Expense[];
+  filteredTotal: number;
   total: number;
   setTotal: (total: number) => void;
-  setExpense: (expense: []) => void;
+  setExpense: (expense: Expense[]) => void;
+  setFiltered: (expense: Expense[]) => void;
+  setFilteredTotal: (total: number) => void;
 };
 
 type User = {
@@ -18,9 +22,13 @@ type User = {
 
 const useExpenseStore = create<fetchLimit>((set) => ({
     expenses: [],
+    filtered: [],
+    filteredTotal: 0,
     total: 0,
+    setFiltered: (expense: Expense[]) => set(() => ({ filtered: [...expense] })),
     setTotal: (total: number) => set(()=>({ total: total })),
-    setExpense: (expense: [])=> set(()=>({expenses: [...expense]}))
+    setFilteredTotal: (total: number) => set(()=>({ filteredTotal: total })),
+    setExpense: (expense: Expense[])=> set(()=>({expenses: [...expense]}))
 }))
 
 const useUserStore = create<User>((set) => ({
