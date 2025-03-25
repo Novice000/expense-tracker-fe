@@ -3,7 +3,7 @@ import { div as DIV } from "framer-motion/client"
 
 function Side({ form }: { form: React.ReactNode }) {
   return (
-    <div className="grid md:grid-cols-2">
+    <div className="h-screen grid md:grid-cols-2">
       <DIV 
       initial={{opacity:0, scale: 0}}
       animate={{opacity:1, scale: 1}}

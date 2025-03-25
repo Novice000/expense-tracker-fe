@@ -1,4 +1,5 @@
 "use client";
+
 import React, { useState, useEffect } from "react";
 import {
   ColumnFiltersState,
@@ -11,7 +12,7 @@ import {
   getSortedRowModel,
   useReactTable,
 } from "@tanstack/react-table";
-import { ArrowUpDown, ChevronDown, MoreHorizontal } from "lucide-react";
+import { ChevronDown } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
   DropdownMenu,
@@ -38,42 +39,39 @@ import { columns, Expense } from "@/components/dashboard/table/table-def";
 import { useQuery } from "@tanstack/react-query";
 import { useExpenseStore } from "@/store/store";
 import { getExpenses } from "@/axios/util";
-import { ClimbingBoxLoader } from "react-spinners";
+import { ClipLoader } from "react-spinners";
 import { Card, CardContent } from "@/components/ui/card";
 
-export function DataTable({ className }: { className: string }) {
-  const { expenses, setExpense, setTotal,setFilteredTotal, setFiltered } = useExpenseStore();
+export function DataTable({ className }: { className?: string }) {
+  const { expenses, setExpense, setTotal, setFilteredTotal, setFiltered } =
+    useExpenseStore();
   const [filteredExpenses, setFilteredExpenses] = useState<Expense[]>([]);
-  const query = useQuery({
-    queryKey: ["expenses"],
-    queryFn: () => getExpenses(),
-  });
   const [monthFilter, setMonthFilter] = useState<number | null>(null);
   const [yearFilter, setYearFilter] = useState<number | null>(null);
   const [sorting, setSorting] = useState<SortingState>([]);
   const [columnFilters, setColumnFilters] = useState<ColumnFiltersState>([]);
   const [columnVisibility, setColumnVisibility] = useState<VisibilityState>({});
+  const [availableMonths, setAvailableMonths] = useState<number[]>([]);
+  const [availableYears, setAvailableYears] = useState<number[]>([]);
 
-  useEffect(() => {
-    if (monthFilter === null && yearFilter === null) {
-      setColumnFilters([]); // No filters applied
-    } else {
-      setColumnFilters([
-        {
-          id: "timestamp",
-          value: { month: monthFilter, year: yearFilter },
-        },
-      ]);
-    }
-  }, [monthFilter, yearFilter]);
+  const query = useQuery({ queryKey: ["expenses"], queryFn: ()=> getExpenses() });
 
   useEffect(() => {
     if (query.data) {
       setExpense(query.data);
-      setTotal(query.data.reduce((acc: number, expense: Expense) => acc + expense.amount, 0));
-      console.log(query.data);
+      setTotal(query.data.reduce((acc : number, expense : Expense) => acc + expense.amount, 0));
     }
-  }, [query.data, setExpense]);
+  }, [query.data, setExpense, setTotal]);
+
+  useEffect(() => {
+    if (monthFilter === null && yearFilter === null) {
+      setColumnFilters([]);
+    } else {
+      setColumnFilters([
+        { id: "timestamp", value: { month: monthFilter, year: yearFilter } },
+      ]);
+    }
+  }, [monthFilter, yearFilter]);
 
   const table = useReactTable({
     data: expenses,
@@ -85,12 +83,7 @@ export function DataTable({ className }: { className: string }) {
     getSortedRowModel: getSortedRowModel(),
     getFilteredRowModel: getFilteredRowModel(),
     onColumnVisibilityChange: setColumnVisibility,
-    state: {
-      sorting,
-      columnFilters,
-      columnVisibility,
-      // rowSelection,
-    },
+    state: { sorting, columnFilters, columnVisibility },
   });
 
   useEffect(() => {
@@ -98,16 +91,11 @@ export function DataTable({ className }: { className: string }) {
       .getFilteredRowModel()
       .rows.map((row) => row.original);
     setFilteredExpenses(newFilteredExpenses);
-    const totalAmount = newFilteredExpenses.reduce(
-      (acc, expense) => acc + expense.amount,
-      0
+    setFilteredTotal(
+      newFilteredExpenses.reduce((acc, expense) => acc + expense.amount, 0)
     );
-    setFilteredTotal(totalAmount);
-    setFiltered(filteredExpenses);
-  }, [table.getFilteredRowModel().rows]);
-
-  const[availableMonths, setAvailableMonths] = useState<number[]>([]);
-  const [availableYears, setAvailableYears] = useState<number[]>([]);
+    setFiltered(newFilteredExpenses);
+  }, [table.getFilteredRowModel().rows, setFilteredTotal, setFiltered]);
 
   useEffect(() => {
     if (expenses.length) {
@@ -116,29 +104,29 @@ export function DataTable({ className }: { className: string }) {
 
       expenses.forEach((expense) => {
         const date = new Date(expense.timestamp);
-        months.add(date.getMonth() + 1); // Months are 0-based
+        months.add(date.getMonth() + 1);
         years.add(date.getFullYear());
       });
 
       setAvailableMonths([...months].sort((a, b) => a - b));
-      setAvailableYears([...years].sort((a, b) => b - a)); // Sort descending
+      setAvailableYears([...years].sort((a, b) => b - a));
     }
   }, [expenses]);
+
   if (query.isLoading) {
     return (
-      <div className="w-full grid place-content-center">
-        <ClimbingBoxLoader size={20} />
+      <div className="flex justify-center items-center w-full h-60">
+        <ClipLoader size={50} color="#4A90E2" />
       </div>
     );
   }
 
   return (
-    <Card className={`w-full h-fit ${className ? className : ""} `}>
+    <Card className={`w-full h-fit ${className || ""}`}>
       <CardContent>
-      <div className="flex items-center py-4 flex-col md:flex-row">
-        <div className="flex gap-4 mb-4">
+        <div className="flex flex-col md:flex-row items-center py-4 gap-4">
           <Select
-            value={monthFilter !== null ? `${monthFilter}` : ""}
+            value={monthFilter?.toString() || ""}
             onValueChange={(value) =>
               setMonthFilter(value === "all" ? null : Number(value))
             }
@@ -147,10 +135,9 @@ export function DataTable({ className }: { className: string }) {
               <SelectValue placeholder="Select Month" />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="all">All</SelectItem>{" "}
-              {/* Default "All" Option */}
+              <SelectItem value="all">All</SelectItem>
               {availableMonths.map((month) => (
-                <SelectItem key={month} value={`${month}`}>
+                <SelectItem key={month} value={month.toString()}>
                   {new Date(0, month - 1).toLocaleString("en-US", {
                     month: "long",
                   })}
@@ -160,7 +147,7 @@ export function DataTable({ className }: { className: string }) {
           </Select>
 
           <Select
-            value={yearFilter !== null ? `${yearFilter}` : ""}
+            value={yearFilter?.toString() || ""}
             onValueChange={(value) =>
               setYearFilter(value === "all" ? null : Number(value))
             }
@@ -169,31 +156,28 @@ export function DataTable({ className }: { className: string }) {
               <SelectValue placeholder="Select Year" />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="all">All</SelectItem>{" "}
-              {/* Default "All" Option */}
+              <SelectItem value="all">All</SelectItem>
               {availableYears.map((year) => (
-                <SelectItem key={year} value={`${year}`}>
+                <SelectItem key={year} value={year.toString()}>
                   {year}
                 </SelectItem>
               ))}
             </SelectContent>
           </Select>
-        </div>
-        <DropdownMenu>
-          <DropdownMenuTrigger asChild>
-            <Button variant="outline" className="ml-auto">
-              Columns <ChevronDown />
-            </Button>
-          </DropdownMenuTrigger>
-          <DropdownMenuContent align="end">
-            {table
-              .getAllColumns()
-              .filter((column) => column.getCanHide())
-              .map((column) => {
-                return (
+
+          <DropdownMenu>
+            <DropdownMenuTrigger asChild>
+              <Button variant="outline" className="ml-auto">
+                Columns <ChevronDown />
+              </Button>
+            </DropdownMenuTrigger>
+            <DropdownMenuContent align="end">
+              {table
+                .getAllColumns()
+                .filter((column) => column.getCanHide())
+                .map((column) => (
                   <DropdownMenuCheckboxItem
                     key={column.id}
-                    className="capitalize"
                     checked={column.getIsVisible()}
                     onCheckedChange={(value) =>
                       column.toggleVisibility(!!value)
@@ -201,18 +185,17 @@ export function DataTable({ className }: { className: string }) {
                   >
                     {column.id}
                   </DropdownMenuCheckboxItem>
-                );
-              })}
-          </DropdownMenuContent>
-        </DropdownMenu>
-      </div>
-      <div className="rounded-md border">
-        <Table>
-          <TableHeader>
-            {table.getHeaderGroups().map((headerGroup) => (
-              <TableRow key={headerGroup.id}>
-                {headerGroup.headers.map((header) => {
-                  return (
+                ))}
+            </DropdownMenuContent>
+          </DropdownMenu>
+        </div>
+
+        <div className="rounded-md border">
+          <Table>
+            <TableHeader>
+              {table.getHeaderGroups().map((headerGroup) => (
+                <TableRow key={headerGroup.id}>
+                  {headerGroup.headers.map((header) => (
                     <TableHead key={header.id}>
                       {header.isPlaceholder
                         ? null
@@ -221,65 +204,37 @@ export function DataTable({ className }: { className: string }) {
                             header.getContext()
                           )}
                     </TableHead>
-                  );
-                })}
-              </TableRow>
-            ))}
-          </TableHeader>
-          <TableBody>
-            {table.getRowModel().rows?.length ? (
-              table.getRowModel().rows.map((row) => (
-                <TableRow
-                  key={row.id}
-                  data-state={row.getIsSelected() && "selected"}
-                >
-                  {row.getVisibleCells().map((cell) => (
-                    <TableCell key={cell.id}>
-                      {flexRender(
-                        cell.column.columnDef.cell,
-                        cell.getContext()
-                      )}
-                    </TableCell>
                   ))}
                 </TableRow>
-              ))
-            ) : (
-              <TableRow>
-                <TableCell
-                  colSpan={columns.length}
-                  className="h-24 text-center"
-                >
-                  No results.
-                </TableCell>
-              </TableRow>
-            )}
-          </TableBody>
-        </Table>
-      </div>
-      <div className="flex items-center justify-end space-x-2 py-4">
-        <div className="flex-1 text-sm text-muted-foreground">
-          {table.getFilteredSelectedRowModel().rows.length} of{" "}
-          {table.getFilteredRowModel().rows.length} row(s) selected.
+              ))}
+            </TableHeader>
+            <TableBody>
+              {table.getRowModel().rows.length ? (
+                table.getRowModel().rows.map((row) => (
+                  <TableRow key={row.id}>
+                    {row.getVisibleCells().map((cell) => (
+                      <TableCell key={cell.id}>
+                        {flexRender(
+                          cell.column.columnDef.cell,
+                          cell.getContext()
+                        )}
+                      </TableCell>
+                    ))}
+                  </TableRow>
+                ))
+              ) : (
+                <TableRow>
+                  <TableCell
+                    colSpan={columns.length}
+                    className="h-24 text-center"
+                  >
+                    No results.
+                  </TableCell>
+                </TableRow>
+              )}
+            </TableBody>
+          </Table>
         </div>
-        <div className="space-x-2">
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={() => table.previousPage()}
-            disabled={!table.getCanPreviousPage()}
-          >
-            Previous
-          </Button>
-          <Button
-            variant="outline"
-            size="sm"
-            onClick={() => table.nextPage()}
-            disabled={!table.getCanNextPage()}
-          >
-            Next
-          </Button>
-        </div>
-      </div>
       </CardContent>
     </Card>
   );

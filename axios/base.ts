@@ -1,6 +1,7 @@
 import axios from "axios";
 
-const BASEURL: string = "http://localhost:8000/api";
+const BASEURL: string =
+  "https://expense-tracker-be-production-f849.up.railway.app/api";
 
 const base = axios.create({
   baseURL: BASEURL,

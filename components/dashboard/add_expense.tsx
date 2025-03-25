@@ -18,9 +18,11 @@ import { postExpense } from "@/axios/util";
 import { toast } from "sonner";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { Card } from "@/components/ui/card";
+import { Loader2 } from "lucide-react"; // Importing a spinner icon
 
-function AddExpenseForm({className}: {className?: string}) {
+function AddExpenseForm({ className }: { className?: string }) {
   const queryClient = useQueryClient();
+
   const mutation = useMutation({
     mutationFn: postExpense,
     onSuccess: () => {
@@ -29,7 +31,7 @@ function AddExpenseForm({className}: {className?: string}) {
     },
     onError: () => {
       toast.error("Error Adding Expense", {
-        description: "please try again",
+        description: "Please try again",
       });
     },
   });
@@ -41,19 +43,20 @@ function AddExpenseForm({className}: {className?: string}) {
       description: "",
     },
   });
+
   async function handleSubmit(data: z.infer<typeof expenseSchema>) {
-    console.log(data);
     mutation.mutate(data);
   }
 
   return (
-    <Card className={`${className? className: ""}`}>
+    <Card className={`${className || ""}`}>
       <Form {...form}>
         <form
           className="space-y-6 w-full px-5 h-full flex flex-col justify-center content-center"
           onSubmit={form.handleSubmit(handleSubmit)}
         >
           <h1 className="text-2xl text-center font-bold">Add Expenses</h1>
+
           <FormField
             control={form.control}
             name="amount"
@@ -66,13 +69,14 @@ function AddExpenseForm({className}: {className?: string}) {
                     {...field}
                     value={field.value}
                     onChange={(e) => field.onChange(e.target.valueAsNumber)}
-                    placeholder="amount"
+                    placeholder="Amount"
                   />
                 </FormControl>
                 <FormMessage />
               </FormItem>
             )}
           />
+
           <FormField
             control={form.control}
             name="description"
@@ -84,14 +88,24 @@ function AddExpenseForm({className}: {className?: string}) {
                     type="text"
                     {...field}
                     value={field.value}
-                    placeholder="description"
+                    placeholder="Description"
                   />
                 </FormControl>
                 <FormMessage />
               </FormItem>
             )}
           />
-          <Button type="submit">Add Expense</Button>
+
+          <Button type="submit" disabled={mutation.isPending}>
+            {mutation.isPending ? (
+              <>
+                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                Adding...
+              </>
+            ) : (
+              "Add Expense"
+            )}
+          </Button>
         </form>
       </Form>
     </Card>

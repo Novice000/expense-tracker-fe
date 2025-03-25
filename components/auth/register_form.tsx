@@ -1,5 +1,5 @@
 "use client";
-import React from "react";
+import React, { useState } from "react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import {
@@ -18,9 +18,12 @@ import { z } from "zod";
 import { Auth } from "@/axios/util";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
+import { Loader2 } from "lucide-react"; // Import loading spinner
 
-function RegisterForm({className}:{className?: string}) {
+function RegisterForm({ className }: { className?: string }) {
   const router = useRouter();
+  const [loading, setLoading] = useState(false);
+
   const form = useForm<z.infer<typeof registerSchema>>({
     resolver: zodResolver(registerSchema),
     defaultValues: {
@@ -32,15 +35,19 @@ function RegisterForm({className}:{className?: string}) {
   });
 
   async function onSubmit(data: z.infer<typeof registerSchema>) {
+    setLoading(true);
     const { username, budget, password } = data;
+
     try {
-      await Auth("register", { username, budget, password});
-      toast.success("Registration successful")
+      await Auth("register", { username, budget, password });
+      toast.success("Registration successful");
       router.push("/login");
     } catch (error) {
-      toast.error("Registration was not successful",{
-        description: "please check form and try again"
+      toast.error("Registration was not successful", {
+        description: "Please check the form and try again",
       });
+    } finally {
+      setLoading(false);
     }
   }
 
@@ -48,10 +55,12 @@ function RegisterForm({className}:{className?: string}) {
     <Form {...form}>
       <form
         onSubmit={form.handleSubmit(onSubmit)}
-        className={`space-y-8 w-full md:w-[45dvh] p-10 shadow-lg rounded-md ${
+        className={`space-y-8 w-full md:w-[45dvh] p-10 shadow-2xl rounded-md ${
           className || ""
         }`}
       >
+        <h1 className="text-2xl text-center md:text-3xl font-bold">Register</h1>
+
         <FormField
           control={form.control}
           name="username"
@@ -66,6 +75,7 @@ function RegisterForm({className}:{className?: string}) {
             </FormItem>
           )}
         />
+
         <FormField
           control={form.control}
           name="budget"
@@ -73,12 +83,18 @@ function RegisterForm({className}:{className?: string}) {
             <FormItem>
               <FormLabel>Budget</FormLabel>
               <FormControl>
-                <Input type="number" placeholder="0 currency, lol" {...field} onChange={(e)=>field.onChange(e.target.valueAsNumber)}/>
+                <Input
+                  type="number"
+                  placeholder="0 currency, lol"
+                  {...field}
+                  onChange={(e) => field.onChange(e.target.valueAsNumber)}
+                />
               </FormControl>
               <FormMessage />
             </FormItem>
           )}
         />
+
         <FormField
           control={form.control}
           name="password"
@@ -92,6 +108,7 @@ function RegisterForm({className}:{className?: string}) {
             </FormItem>
           )}
         />
+
         <FormField
           control={form.control}
           name="confirmPassword"
@@ -99,18 +116,30 @@ function RegisterForm({className}:{className?: string}) {
             <FormItem>
               <FormLabel>Confirm Password</FormLabel>
               <FormControl>
-                <Input type="password" placeholder="Confirm Password" {...field} />
+                <Input
+                  type="password"
+                  placeholder="Confirm Password"
+                  {...field}
+                />
               </FormControl>
               <FormMessage />
             </FormItem>
           )}
         />
-        <Button type="submit" className="w-full text-center">
-          Submit
+
+        <Button type="submit" className="w-full text-center" disabled={loading}>
+          {loading ? <Loader2 className="animate-spin mr-2" /> : "Submit"}
         </Button>
+
+        <p className="text-center">
+          Already have an account?{" "}
+          <a href="/login" className="text-black underline">
+            Login
+          </a>
+        </p>
       </form>
     </Form>
   );
 }
 
-export default RegisterForm
+export default RegisterForm;

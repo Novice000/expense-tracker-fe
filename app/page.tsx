@@ -2,6 +2,7 @@ import React from "react";
 import { Button } from "@/components/ui/button";
 import TypeWritter from "@/components/home/typewritter";
 import { Metadata } from "next";
+import Link from "next/link";
 
 export const metadata: Metadata = {
   title: "Expense Tracker",
@@ -22,7 +23,7 @@ export default function Home() {
           SENTENCE={SENTENCE}
           className="text-xl md:text-2xl mb-10"
         />
-        <Button className="px-8 py-4">Get Started</Button>
+        <Link href={"/register"}> <Button className="px-8 py-4">Get Started</Button> </Link>
       </div>
     </div>
   );
