@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { useRouter } from "next/router";
+import { useRouter } from "next/navigation";
 import jwt from "jsonwebtoken";
 
 export function useAuth() {
@@ -8,34 +8,37 @@ export function useAuth() {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
 
   useEffect(() => {
-    if (!router.isReady) return; // Wait for router to be ready
-    const token =
-      typeof window !== "undefined"
-        ? localStorage.getItem("access_token")
-        : null;
-    if (!token) {
-      router.push("/login");
-      return;
-    }
-    try {
-      const payload: any = jwt.decode(token);
-      if (!payload || !payload.exp) {
-        throw new Error("Invalid token");
+    const checkAuth = () => {
+      const token = localStorage.getItem("access_token");
+      console.log("Checking token:", token); // Debugging
+
+      if (!token) {
+        console.log("no token")
+        router.replace("/login");
+        return;
       }
-      if (payload.exp < Date.now() / 1000) {
+
+      try {
+        const payload: any = jwt.decode(token);
+        if (!payload?.exp || payload.exp < Date.now() / 1000) {
+          console.log("expired")
+          localStorage.removeItem("access_token");
+          router.replace("/login");
+        } else {
+          setIsAuthenticated(true);
+        }
+      } catch (error) {
+  
+        console.error("Authentication error:", error);
         localStorage.removeItem("access_token");
-        router.push("/login");
-      } else {
-        setIsAuthenticated(true);
+        router.replace("/login");
+      } finally {
+        setLoading(false);
       }
-    } catch (error) {
-      console.error("Authentication error:", error);
-      localStorage.removeItem("access_token");
-      router.push("/login");
-    } finally {
-      setLoading(false);
-    }
-  }, [router.isReady]);
+    };
+
+    checkAuth();
+  }, [router]); // Add router as a dependency
 
   return { loading, isAuthenticated };
 }

@@ -15,19 +15,33 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { registerSchema } from "@/schemas/auth";
 import { z } from "zod";
+import { Auth } from "@/axios/util";
+import { useRouter } from "next/navigation";
+import { toast } from "sonner";
 
 function RegisterForm({className}:{className?: string}) {
+  const router = useRouter();
   const form = useForm<z.infer<typeof registerSchema>>({
     resolver: zodResolver(registerSchema),
     defaultValues: {
       username: "",
+      budget: "",
       password: "",
       confirmPassword: "",
     },
   });
 
-  function onSubmit(data: z.infer<typeof registerSchema>) {
-    console.log(data);
+  async function onSubmit(data: z.infer<typeof registerSchema>) {
+    const { username, budget, password } = data;
+    try {
+      await Auth("register", { username, budget, password});
+      toast.success("Registration successful")
+      router.push("/login");
+    } catch (error) {
+      toast.error("Registration was not successful",{
+        description: "please check form and try again"
+      });
+    }
   }
 
   return (
@@ -44,8 +58,22 @@ function RegisterForm({className}:{className?: string}) {
           render={({ field }) => (
             <FormItem>
               <FormLabel>Username</FormLabel>
+              <FormDescription>Emails are valid as usernames</FormDescription>
               <FormControl>
                 <Input placeholder="Username" {...field} />
+              </FormControl>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
+        <FormField
+          control={form.control}
+          name="budget"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>Budget</FormLabel>
+              <FormControl>
+                <Input type="number" placeholder="0 currency, lol" {...field} onChange={(e)=>field.onChange(e.target.valueAsNumber)}/>
               </FormControl>
               <FormMessage />
             </FormItem>
@@ -58,7 +86,7 @@ function RegisterForm({className}:{className?: string}) {
             <FormItem>
               <FormLabel>Password</FormLabel>
               <FormControl>
-                <Input placeholder="Password" {...field} />
+                <Input type="password" placeholder="Password" {...field} />
               </FormControl>
               <FormMessage />
             </FormItem>
@@ -71,7 +99,7 @@ function RegisterForm({className}:{className?: string}) {
             <FormItem>
               <FormLabel>Confirm Password</FormLabel>
               <FormControl>
-                <Input placeholder="Confirm Password" {...field} />
+                <Input type="password" placeholder="Confirm Password" {...field} />
               </FormControl>
               <FormMessage />
             </FormItem>

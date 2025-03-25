@@ -14,8 +14,12 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { loginSchema } from "@/schemas/auth";
 import { z } from "zod";
+import { Auth } from "@/axios/util";
+import { useRouter } from "next/navigation";
+import { toast } from "sonner";
 
 function LoginForm({ className }: { className?: string }) {
+  const router = useRouter();
   const form = useForm<z.infer<typeof loginSchema>>({
     resolver: zodResolver(loginSchema),
     defaultValues: {
@@ -24,13 +28,30 @@ function LoginForm({ className }: { className?: string }) {
     },
   });
 
-  function onSubmit(data: z.infer<typeof loginSchema>) {
+  async function onSubmit(data: z.infer<typeof loginSchema>) {
     console.log(data);
+    const formdata = new FormData();
+    formdata.append("username", data.username);
+    formdata.append("password", data.password);
+    try {
+      await Auth("login", formdata);
+      toast.success("Login succesful")
+      router.push("/dashboard");
+    } catch (error) {
+      toast.error("Login was not successful", {
+        description: "please check form and try again",
+      });
+    }
   }
 
   return (
     <Form {...form}>
-      <form onSubmit={form.handleSubmit(onSubmit)} className={`space-y-8 w-full md:w-[45dvh] p-10 shadow-lg rounded-md ${ className || ""}`}>
+      <form
+        onSubmit={form.handleSubmit(onSubmit)}
+        className={`space-y-8 w-full md:w-[45dvh] p-10 shadow-lg rounded-md ${
+          className || ""
+        }`}
+      >
         <FormField
           control={form.control}
           name="username"
@@ -52,16 +73,18 @@ function LoginForm({ className }: { className?: string }) {
             <FormItem>
               <FormLabel>Password</FormLabel>
               <FormControl>
-                <Input placeholder="Password" {...field} />
+                <Input type="password" placeholder="Password" {...field} />
               </FormControl>
               <FormMessage />
             </FormItem>
           )}
         />
-        <Button type="submit" className="w-full text-center">Submit</Button>
+        <Button type="submit" className="w-full text-center">
+          Submit
+        </Button>
       </form>
     </Form>
   );
 }
 
-export default LoginForm
+export default LoginForm;
