@@ -34,7 +34,7 @@ function ExpenseBudgetPieChart({ className }: { className?: string }) {
   const { budget } = useUserStore();
   // Convert to an array of objects
   const chartData = [
-    { name: "Total", value: filteredTotal, fill: "var(--chart-2)" },
+    { name: "Expense", value: filteredTotal, fill: "var(--chart-2)" },
     { name: "Budget", value: budget, fill: "var(--chart-1)" },
   ];
 
