@@ -21,7 +21,7 @@ import { useExpenseStore } from "@/store/store";
 const chartConfig = {
   expense: {
     label: "expense",
-    color: "hsl(var(--chart-1))",
+    color: "var(--chart-2)",
   },
 //   mobile: {
 //     label: "Mobile",

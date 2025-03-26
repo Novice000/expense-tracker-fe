@@ -20,12 +20,12 @@ import { useExpenseStore, useUserStore } from "@/store/store";
 
 const chartConfig = {
   total: {
-    label: "Total",
-    color: "hsl(var(--chart-1))",
+    label: "Expense",
+    color: "var(--chart-1)",
   },
   budget: {
     label: "Budget",
-    color: "hsl(var(--chart-2))",
+    color: "var(--chart-2)",
   },
 } satisfies ChartConfig;
 
@@ -34,8 +34,8 @@ function ExpenseBudgetPieChart({ className }: { className?: string }) {
   const { budget } = useUserStore();
   // Convert to an array of objects
   const chartData = [
-    { name: "Total", value: filteredTotal, fill: "hsl(var(--chart-1))" },
-    { name: "Budget", value: budget, fill: "hsl(var(--chart-success))" },
+    { name: "Total", value: filteredTotal, fill: "var(--chart-2)" },
+    { name: "Budget", value: budget, fill: "var(--chart-1)" },
   ];
 
   return (
@@ -60,7 +60,8 @@ function ExpenseBudgetPieChart({ className }: { className?: string }) {
               nameKey="name"
               innerRadius={60}
               strokeWidth={5}
-              fill="hsl(var(--chart-success))"
+              color="hsl(var(--chart-2))"
+              fill="hsl(var(--chart-2))"
             >
               <Label
                 content={({ viewBox }) => {
@@ -84,7 +85,7 @@ function ExpenseBudgetPieChart({ className }: { className?: string }) {
                           y={(viewBox.cy || 0) + 24}
                           className="fill-muted-foreground"
                         >
-                          Total
+                          Total Expense
                         </tspan>
                       </text>
                     );

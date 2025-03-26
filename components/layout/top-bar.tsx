@@ -40,7 +40,7 @@ function TopBar() {
 
   return (
     <div
-      className={`${anton.className} flex items-center p-3 text-3xl shadow-lg justify-between`}
+      className={`${anton.className} flex items-center p-3 text-lg md:text-3xl shadow-lg justify-between`}
     >
       <div>
         Welcome{" "}

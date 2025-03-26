@@ -28,7 +28,7 @@ export const columns: ColumnDef<Expense>[] = [
       // Format the amount as a dollar amount
       const formatted = new Intl.NumberFormat("en-US", {
         style: "currency",
-        currency: "USD",
+        currency: "NGN",
       }).format(amount);
       
       return <div className="text-center font-medium">{formatted}</div>;

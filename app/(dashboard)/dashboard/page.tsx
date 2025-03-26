@@ -29,20 +29,23 @@ function Dashboard() {
         <AddExpenseForm className="flex-1/5" />
       </div>
       <div className="flex md:flex-row flex-col gap-2 items-center">
-        <Card className="flex flex-col items-center justify-center flex-1/5 gap-2 p-6 shadow-md bg-background">
+        <DataTable className="col-span-2" />
+        <Card className="flex flex-col items-center justify-center flex-1/5 gap-2 p-6 shadow-md  w-full bg-background">
           <CardHeader className="text-center">
-            <CardTitle className="text-xl font-semibold text-muted-foreground">
+            <CardTitle className="text-xl text-center font-semibold text-muted-foreground">
               Total Expense
             </CardTitle>
-            <CardDescription className="text-md text-muted-foreground">
+            <CardDescription className="text-md text-center text-muted-foreground">
               Overall spending
             </CardDescription>
           </CardHeader>
           <CardContent className="text-4xl text-center font-bold text-destructive">
-            ${total.toLocaleString()}
+            {new Intl.NumberFormat("en-US", {
+              style: "currency",
+              currency: "NGN",
+            }).format(total)}
           </CardContent>
         </Card>
-        <DataTable className="col-span-2" />
       </div>
     </div>
   );

@@ -125,6 +125,7 @@ export function DataTable({ className }: { className?: string }) {
     <Card className={`w-full h-fit ${className || ""}`}>
       <CardContent>
         <div className="flex flex-col md:flex-row items-center py-4 gap-4">
+          <div className="flex justify-between md:justify-start gap-2 w-full">
           <Select
             value={monthFilter?.toString() || ""}
             onValueChange={(value) =>
@@ -164,7 +165,7 @@ export function DataTable({ className }: { className?: string }) {
               ))}
             </SelectContent>
           </Select>
-
+          </div>
           <DropdownMenu>
             <DropdownMenuTrigger asChild>
               <Button variant="outline" className="ml-auto">
